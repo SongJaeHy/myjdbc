@@ -32,9 +32,11 @@
 			pstmt.setString(1, sessionId);
 			
 			pstmt.executeUpdate();
+			
+			// 세션 파기는 두 번 실행할 수 없으므로
+			// 로직당 한 번만 실행괴도록 배치한다.
 			session.invalidate();
 			
-		
 		}catch(ClassNotFoundException e){
 			System.out.println("드라이버 로딩 실패");
 		}catch(SQLException e){
