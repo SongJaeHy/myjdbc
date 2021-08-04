@@ -1,3 +1,5 @@
+<%@page import="kr.co.ictedu.UsersVO"%>
+<%@page import="kr.co.ictedu.UsersDAO"%>
 <%@page import="java.sql.*"%>
 <%@ page language="java" contentType="text/html; charset=UTF-8"
     pageEncoding="UTF-8"%>
@@ -14,45 +16,14 @@
  	String email=request.getParameter("email");
  	
  
- 	Connection con = null;
- 	// 쿼리문 실행을 위한 preparedStatement 객체 생성
- 	PreparedStatement pstmt = null;
- 	
- 
- 	try{
- 		Class.forName("com.mysql.cj.jdbc.Driver");
- 		
- 		String url = "jdbc:mysql://localhost/ict03";
- 		
- 		con = DriverManager.getConnection(url, "root", "mysql");
- 		
- 		// 1. 쿼리문을 작성합니다.
- 		String sql = "INSERT INTO users VALUES(?, ?, ?, ?)";
- 		
- 		// 2. 만든 쿼리문의 ? 자리에 적용할 자바 변수를 집어넣습니다.
- 		pstmt = con.prepareStatement(sql);
- 		pstmt.setString(1, uid);
- 		pstmt.setString(2, upw);
- 		pstmt.setString(3, uname);
- 		pstmt.setString(4, email);
- 		
- 		// 3. 만든 쿼리문 실행하기
- 		pstmt.executeUpdate();
- 		
- 		
- 	}catch(ClassNotFoundException e){
- 		System.out.println("드라이버 로딩 실패");
- 	}catch(SQLException e){
- 		System.out.println("에러 : " + e);
- 	}finally{
- 		try{
- 			if(con!=null && !con.isClosed()){
- 				con.close();
- 			}
- 		}catch(SQLException e){
- 			e.printStackTrace();
- 		}
- 	}
+	 // 기존에 있던 회원 가입 로직은 DAO클래스로 이관합니다.
+	 // DAO 클래스 받아오기
+	 UsersDAO dao = UsersDAO.getInstance();
+	 
+	 // VO객체 생성 및 uid, upw, uname, email setter로 입력해주기
+	 UsersVO user = new UsersVO(uid, upw, uname, email);
+	 
+	 dao.joinUsers(user);
  %>
 <!DOCTYPE html>
 <html>
@@ -62,5 +33,6 @@
 </head>
 <body>
 	<h1>회원 가입을 축하합니다!</h1>
+	<a href="user_login_form.jsp">로그인하러 가기</a>
 </body>
 </html>
