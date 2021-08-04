@@ -28,9 +28,11 @@
 			
 			String sql = "DELETE FROM users WHERE uid=?";
 			
+			// 2. 쿼리문의 ?자리에 적용할 변수를 집어넣습니다.
 			pstmt = con.prepareStatement(sql);
 			pstmt.setString(1, sessionId);
 			
+			// 3. 쿼리문 실행
 			pstmt.executeUpdate();
 			
 			// 세션 파기는 두 번 실행할 수 없으므로
