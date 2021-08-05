@@ -20,6 +20,12 @@
 	UsersVO resultData = dao.getUserInfo(user);
 	System.out.println("DB에서 가져온 데이터 :"+ resultData);
 	
+	// resultData내부의 데이터가 null인 경우는 조회가 실패한 경우이므로 로그인창으로 돌아가기
+	if(resultData.getUid() == null){
+		session.invalidate();
+		response.sendRedirect("user_login_form.jsp");
+	}
+	
 %>
 <!DOCTYPE html>
 <html>
