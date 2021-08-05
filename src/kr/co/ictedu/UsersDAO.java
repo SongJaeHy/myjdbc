@@ -10,6 +10,15 @@ public class UsersDAO {
 	private static final String DBID = "root";
 	private static final String DBPW = "mysql";
 	
+	// 메서드 결과에 따른 리턴값 상수로 표기
+	private static final int ID_DELETE_SUCCESS = 1;
+	private static final int ID_DELETE_FAIL = 0;
+	
+	private static final int ID_LOGIN_SUCCESS = 1;
+	private static final int ID_LOGIN_FAIL = 0;
+	
+	
+	
 	/*
 	 * DAO 클래스는 하나의 객체만으로도 DB연동을 수행할 수 있기 때문에
 	 * 메모리 관리 차원에서 클래스의 객체를 단 1개만 생성하도록
@@ -38,7 +47,7 @@ public class UsersDAO {
 		return dao;
 	}
 	
-	// 기존에 있던 회원 가입 로직은 DAO클래스로 이관합니다.
+	
 	// 회원가입을 처리하는 메서드 선언
 	// DB에 들어가는 데, 혹은 DB에서 출력되어 나오는 데이터
 	// 모두가 UsersVO 내부 자료형식을 벗어날 수 없으므로
@@ -86,5 +95,176 @@ public class UsersDAO {
 			}
 		}
 		return 1;
-	}// end joinUser
-}
+	} //end joinUser
+	
+	
+	// usersDelete
+	// 원래 대다수 DAO는 UsersVO 하나로 모든 처리를 해결할 수 있습니다.
+	// 다만 삭제로직은 폼에서 날린 비밀번호와 원래 DB에 저장되어있던 비밀번호를
+	// 비교해야 하기 때문에 폼에서 날린 비밀번호를 추가로 입력받습니다.
+	public int usersDelete(UsersVO user, String dpw) {
+		Connection con = null;
+		// 쿼리문 실행을 위한 preparedStatement 객체 생성
+		PreparedStatement pstmt = null;
+		
+		try{
+			// UsersVO에 입력된 비밀번호와 폼에서 날림 dpw를 비교
+			if(user.getUpw().equals(dpw)) {
+			// 접속 주소, 계정, 비밀번호를 이용해 접속계정
+			con = DriverManager.getConnection(URL, DBID, DBPW);
+			
+			// 1. DELETE 쿼리문을 작성합니다.
+			String sql = "DELETE FROM users WHERE uid=?";
+			
+			// 2. 만든 쿼리문의 ? 자리에 적용할 자바 변수를 집어넣습니다.
+			pstmt = con.prepareStatement(sql);
+			pstmt.setString(1, user.getUid());
+			
+			// 3. 만든 쿼리문 실행하기
+			pstmt.executeUpdate();
+			
+			// DAO내부적으로 session, response 등 내장 객체에 대한
+			// 처리를 할 수 없으모로, 결과 정보만 리턴
+				return ID_DELETE_SUCCESS;
+			} else {
+				// 비밀번호 틀리게 입력힌 걍우
+				return ID_DELETE_FAIL;
+			}
+		} catch(SQLException e){
+			System.out.println("에러 : " + e);
+		} finally {
+			try{
+				if(con!=null && !con.isClosed()){
+					con.close();
+				}// pstmt 닫기
+				if(pstmt!=null && !pstmt.isClosed()) {
+					pstmt.close();
+				}
+			}catch(SQLException e){
+				e.printStackTrace();
+			}
+		}
+		
+		// 상단 try블럭 내에서 로직이 처리가 안 되어서 여기까지 코드가
+		// 도달 했다느 자체로 이미 뭔가 실행이 누락되었다는 이야기이므로
+		// 0을 리턴
+		return ID_DELETE_FAIL;
+	} //end usersDelete
+	public int userLogin(UsersVO user) {
+		Connection con = null;
+		// 쿼리문 실행을 위한 preparedStatement 객체 생성
+		PreparedStatement pstmt = null;
+		
+		ResultSet rs = null;
+		
+		try{
+			// 접속 주소, 계정, 비밀번호를 이용해 접속계정
+			con = DriverManager.getConnection(URL, DBID, DBPW);
+					
+			// 1. SELECT쿼리문을 작성합니다.
+			String sql = "SELECT * FROM users WHERE uid=?";
+					
+			// 2. 만든 쿼리문의 ? 자리에 적용할 자바 변수를 집어넣습니다.
+			pstmt = con.prepareStatement(sql);
+			pstmt.setString(1, user.getUid());
+				
+			// 3. 만든 쿼리문 실행하기
+			rs = pstmt.executeQuery();
+					
+			if(rs.next()){
+				String dbId = rs.getString("uid");
+				String dbPw = rs.getString("upw");
+				  		
+				if(user.getUid().equals(dbId) && user.getUpw().equals(dbPw)){
+					return ID_LOGIN_SUCCESS;
+				 }else {
+				  	return ID_LOGIN_FAIL;
+				  }
+			}else {
+				return ID_LOGIN_FAIL;
+			}
+		}catch(SQLException e){
+			System.out.println("에러 : " + e);
+		}finally{
+			try{
+				if(con!=null && !con.isClosed()){
+					con.close();
+				}// pstmt 닫기
+				if(pstmt!=null && !pstmt.isClosed()) {
+					pstmt.close();
+				}
+			}catch(SQLException e){
+				e.printStackTrace();
+			}
+		}
+		return ID_LOGIN_FAIL;
+	} //end userLogin
+	
+	// getUserInfo 메서드
+	// 수정 로직을 사용하기 전에 수정할 타겟 아이디의 정보를 얻어오기 위헤
+	// 사용하는 메서드로 아이디, 비밀번호, 이름, 이메일을, UsersVO에 넣어서
+	// 리턴합니다.
+	public UsersVO getUserInfo(UsersVO user) {
+		Connection con = null;
+		PreparedStatement pstmt = null;
+		ResultSet rs = null;
+		
+		// 비어있는 UsersVO도 같이 선언
+		UsersVO resultData = new UsersVO();
+		
+		try{
+			
+			// 접속 주소, 계정, 비밀번호를 이용해 접속계정
+			con = DriverManager.getConnection(URL, DBID, DBPW);
+			
+			// 1. 쿼리문을 작성합니다.
+			String sql = "SELECT * FROM users WHERE uid=?";
+			
+			// 2. 만든 쿼리문의 ? 자리에 적용할 자바 변수를 집어넣습니다.
+			// DB연결 후 입력빋은 user의 getUid()를 이용해 조회구문 작성
+			pstmt = con.prepareStatement(sql);
+			pstmt.setString(1, user.getUid());
+			
+			
+			// 3. 만든 쿼리문 실행하기
+			rs = pstmt.executeQuery();
+			
+			if(rs.next()) {
+				// 이후 ResultSet에 담겨있는 자료를 다시 다 꺼내서
+				// 새로 선언한 UsersVO에 변수에 입력해준 후
+				resultData.setUid(rs.getString("uid"));
+				resultData.setUpw(rs.getString("upw"));
+				resultData.setUname(rs.getString("uname"));
+				resultData.setEmail(rs.getString("email"));
+			}
+			
+		}catch(SQLException e){
+			System.out.println("에러 : " + e);
+		}finally{
+			try{
+				if(con!=null && !con.isClosed()){
+					con.close();
+				}// pstmt 닫기
+				if(pstmt!=null && !pstmt.isClosed()) {
+					pstmt.close();
+				}
+			}catch(SQLException e){
+				e.printStackTrace();
+			}
+			
+		}
+		// ResultSet에 있던 자료를 입력받은 UsersVO를 리턴
+		return resultData;
+	} //end getUserInfo
+}	
+		
+	
+	
+	
+
+
+	
+
+	
+	
+
