@@ -1,6 +1,7 @@
 package kr.co.ictedu;
 
 import java.sql.*;
+import java.util.ArrayList;
 
 //DAO클래스는 DB연동을 전담해 처리합니다. 
 public class UsersDAO {
@@ -16,6 +17,9 @@ public class UsersDAO {
 	
 	private static final int ID_LOGIN_SUCCESS = 1;
 	private static final int ID_LOGIN_FAIL = 0;
+	
+	private static final int ID_UPDATE_SUCCESS = 1;
+	private static final int ID_UPDATE_FAIL = 0;
 	
 	
 	
@@ -99,6 +103,7 @@ public class UsersDAO {
 	
 	
 	// usersDelete
+	// 삭제
 	// 원래 대다수 DAO는 UsersVO 하나로 모든 처리를 해결할 수 있습니다.
 	// 다만 삭제로직은 폼에서 날린 비밀번호와 원래 DB에 저장되어있던 비밀번호를
 	// 비교해야 하기 때문에 폼에서 날린 비밀번호를 추가로 입력받습니다.
@@ -150,6 +155,8 @@ public class UsersDAO {
 		// 0을 리턴
 		return ID_DELETE_FAIL;
 	} //end usersDelete
+	
+	// 로그인
 	public int userLogin(UsersVO user) {
 		Connection con = null;
 		// 쿼리문 실행을 위한 preparedStatement 객체 생성
@@ -256,6 +263,117 @@ public class UsersDAO {
 		// ResultSet에 있던 자료를 입력받은 UsersVO를 리턴
 		return resultData;
 	} //end getUserInfo
+	
+	// 수정하는 로직
+	public int userUpdate(UsersVO user) {
+		Connection con = null;
+		// 쿼리문 실행을 위한 preparedStatement 객체 생성
+		PreparedStatement pstmt = null;
+		
+		
+		try{
+			
+			// 접속 주소, 계정, 비밀번호를 이용해 접속계정
+			con = DriverManager.getConnection(URL, DBID, DBPW);
+			
+			// 1. 쿼리문을 작성합니다.
+			String sql = "UPDATE users SET upw=?, uname=?, email=? WHERE uid=?";
+			
+			// 2. 만든 쿼리문의 ? 자리에 적용할 자바 변수를 집어넣습니다.
+			pstmt = con.prepareStatement(sql);
+			pstmt.setString(1, user.getUpw());
+			pstmt.setString(2, user.getUname());
+			pstmt.setString(3, user.getEmail());
+			pstmt.setString(4, user.getUid());
+			
+			// 3. 만든 쿼리문 실행하기
+			pstmt.executeUpdate();
+			
+			return ID_UPDATE_SUCCESS;
+			
+		}catch(SQLException e){
+			System.out.println("에러 : " + e);
+		}finally{
+			try{
+				if(con!=null && !con.isClosed()){
+					con.close();
+				}// pstmt 닫기
+				if(pstmt!=null && !pstmt.isClosed()) {
+					pstmt.close();
+				}
+			}catch(SQLException e){
+				e.printStackTrace();
+			}
+		}
+		return ID_UPDATE_FAIL;
+	}// end userUpdate;
+	
+	// 전체 데이터를 다 가져오는 getAllUser()
+	// 파라미터는 필요 없습니다.(조건 없이 전체 유저 목록을 가져옴)
+	// UserVO 1개는 SELECT구문의 row 한 줄을 의미합니다.
+	// 전체 데이터는 회원 가입 상황에 따라 유동적이므로
+	// 길이를 정해놓고 로직을 짜면 안 됩니다.
+	// 따라서 길이를 가변적으로 맞춰줄 수 있는 ArrayList로 UsersVO를 감싸
+	// 조회 결과가 몇 줄이 나오던지 대응할 수 있도록 합니다.
+	public ArrayList<UsersVO> getAllUser() {
+		Connection con = null;
+		PreparedStatement pstmt = null;
+		ResultSet rs = null;
+		
+		// 비어있는 ArrayList<UsersVO>도 같이 선언
+		ArrayList<UsersVO> userList = new ArrayList<>();
+		
+		// DB연결로직을 집어넣어주세요.
+		try{
+			
+			// 접속 주소, 계정, 비밀번호를 이용해 접속계정
+			con = DriverManager.getConnection(URL, DBID, DBPW);
+			
+			// 1. 쿼리문을 작성합니다.
+			String sql = "SELECT * FROM users";
+			
+			// 2. 만든 쿼리문의 ? 자리에 적용할 자바 변수를 집어넣습니다.
+			pstmt = con.prepareStatement(sql);
+
+			// 3. 만든 쿼리문 실행하기
+			rs = pstmt.executeQuery();
+			
+			// row 개수만큼 반복합니다.
+			while(rs.next()) {
+				// ArrayList에 넣어줄 빈 UsersVO생성
+				UsersVO user = new UsersVO();
+				// ResultSet에 든 컬럼별 값을 꺼냅니다.
+				String uid = rs.getString("uid");
+				String upw = rs.getString("upw");
+				String uname = rs.getString("uname");
+				String email = rs.getString("email");
+				// UsersVO에 setter로 저장합니다.
+				user.setUid(uid);
+				user.setUpw(upw);
+				user.setUname(uname);
+				user.setEmail(email);
+				// ArrayList에 그 UsersVO를 저장합니다.
+				userList.add(user);
+			}
+			
+		}catch(SQLException e){
+			System.out.println("에러 : " + e);
+		}finally{
+			try{
+				if(con!=null && !con.isClosed()){
+					con.close();
+				}// pstmt 닫기
+				if(pstmt!=null && !pstmt.isClosed()) {
+					pstmt.close();
+				}
+			}catch(SQLException e){
+				e.printStackTrace();
+			}
+			
+		}
+		// ResultSet에 있던 자료를 입력받은 UsersVO를 리턴
+		return resultData;
+	}
 }	
 		
 	

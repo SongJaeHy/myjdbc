@@ -34,14 +34,14 @@
 <title>Insert title here</title>
 </head>
 <body>
-	<h1><%= resultData.getUid() %>계정 정보 수정</h1>
+	<h1><%= resultData.getUid() %> 계정 정보 수정</h1>
 
 	<form action="user_update_ok.jsp" method="post">
 	<input type="text" name="uid" placeholder="아이디" 
-	readonly value="<%= resultData.getUid() %>"><br/>
-	<input type="password" name="upw" placeholder="비밀번호"><br/>
+	readonly required value="<%= resultData.getUid() %>"><br/>
+	<input type="password" name="upw" placeholder="비밀번호" required><br/>
 	<input type="text" name="uname" 
-	placeholder="이름" value="<%= resultData.getUname() %>"><br/>
+	placeholder="이름" value="<%= resultData.getUname() %>" required><br/>
 	<input type="text" name="email" 
 	placeholder="이메일" value="<%= resultData.getEmail() %>"><br/>
 	<input type="submit" value="계정정보수정하기">
