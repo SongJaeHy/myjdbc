@@ -3,13 +3,24 @@ package kr.co.ictedu;
 import java.sql.*;
 import java.util.ArrayList;
 
+
+import javax.naming.Context;
+import javax.naming.InitialContext;
+import javax.sql.DataSource;
+
 //DAO클래스는 DB연동을 전담해 처리합니다. 
 public class UsersDAO {
 	
 	// DB주소 아이디 패스워드 미리 저장
-	private static final String URL = "jdbc:mysql://localhost/ict03";
-	private static final String DBID = "root";
-	private static final String DBPW = "mysql";
+	
+	// 일반 DAO 활용시 사용하던 것들
+//	private static final String URL = "jdbc:mysql://localhost/ict03";
+//	private static final String DBID = "root";
+//	private static final String DBPW = "mysql";
+	
+	// 커넥션 풀 설정 후 사용하는 것
+	// javax.sql의 DataSource를 임포트해주세요.
+	private DataSource ds;
 	
 	// 메서드 결과에 따른 리턴값 상수로 표기
 	private static final int ID_DELETE_SUCCESS = 1;
@@ -33,9 +44,19 @@ public class UsersDAO {
 	// 1. 외부에서 객체를 new 키워드로 만들어 쓸 수 없도록 생성자에
 	// private을 붙여줍니다.
 	private UsersDAO() {
+		// 일반 JDBC에서 활용하던 드라이버 설정코드
+//		try {
+//			Class.forName("com.mysql.cj.jdbc.Driver");
+//		}catch(Exception e) {
+//			e.printStackTrace();
+//		}
+		
+		// 커넥션 풀에서 활용하는 드라이버 설정 코드
+		// 역시 javax.nameing의 요소를 임포트합니다.
 		try {
-			Class.forName("com.mysql.cj.jdbc.Driver");
-		}catch(Exception e) {
+			Context ct = new InitialContext();
+			ds = (DataSource)ct.lookup("java:comp/env/jdbc/mysql");
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
@@ -68,8 +89,11 @@ public class UsersDAO {
 		try{
 			
 			// 접속 주소, 계정, 비밀번호를 이용해 접속계정
-			con = DriverManager.getConnection(URL, DBID, DBPW);
+			// JDBC 기준 DB접속 코드
+			//con = DriverManager.getConnection(URL, DBID, DBPW);
 			
+			// 커넥션 풀 기준 DB 접속 코드
+			con = ds.getConnection();
 			// 1. 쿼리문을 작성합니다.
 			String sql = "INSERT INTO users VALUES(?, ?, ?, ?)";
 			
@@ -116,8 +140,9 @@ public class UsersDAO {
 			// UsersVO에 입력된 비밀번호와 폼에서 날림 dpw를 비교
 			if(user.getUpw().equals(dpw)) {
 			// 접속 주소, 계정, 비밀번호를 이용해 접속계정
-			con = DriverManager.getConnection(URL, DBID, DBPW);
+			//con = DriverManager.getConnection(URL, DBID, DBPW);
 			
+			con = ds.getConnection();
 			// 1. DELETE 쿼리문을 작성합니다.
 			String sql = "DELETE FROM users WHERE uid=?";
 			
@@ -166,8 +191,9 @@ public class UsersDAO {
 		
 		try{
 			// 접속 주소, 계정, 비밀번호를 이용해 접속계정
-			con = DriverManager.getConnection(URL, DBID, DBPW);
-					
+			//con = DriverManager.getConnection(URL, DBID, DBPW);
+			
+			con = ds.getConnection();
 			// 1. SELECT쿼리문을 작성합니다.
 			String sql = "SELECT * FROM users WHERE uid=?";
 					
@@ -222,7 +248,7 @@ public class UsersDAO {
 		try{
 			
 			// 접속 주소, 계정, 비밀번호를 이용해 접속계정
-			con = DriverManager.getConnection(URL, DBID, DBPW);
+			con = ds.getConnection();
 			
 			// 1. 쿼리문을 작성합니다.
 			String sql = "SELECT * FROM users WHERE uid=?";
@@ -274,7 +300,7 @@ public class UsersDAO {
 		try{
 			
 			// 접속 주소, 계정, 비밀번호를 이용해 접속계정
-			con = DriverManager.getConnection(URL, DBID, DBPW);
+			con = ds.getConnection();
 			
 			// 1. 쿼리문을 작성합니다.
 			String sql = "UPDATE users SET upw=?, uname=?, email=? WHERE uid=?";
@@ -327,7 +353,7 @@ public class UsersDAO {
 		try{
 			
 			// 접속 주소, 계정, 비밀번호를 이용해 접속계정
-			con = DriverManager.getConnection(URL, DBID, DBPW);
+			con = ds.getConnection();
 			
 			// 1. 쿼리문을 작성합니다.
 			String sql = "SELECT * FROM users";
@@ -339,7 +365,7 @@ public class UsersDAO {
 			rs = pstmt.executeQuery();
 			
 			// row 개수만큼 반복합니다.
-			while(rs.next()) {
+			while(rs.next()) {// 1번줄 -> 2번줄 -> 3번줄
 				// ArrayList에 넣어줄 빈 UsersVO생성
 				UsersVO user = new UsersVO();
 				// ResultSet에 든 컬럼별 값을 꺼냅니다.
@@ -371,9 +397,9 @@ public class UsersDAO {
 			}
 			
 		}
-		// ResultSet에 있던 자료를 입력받은 UsersVO를 리턴
-		return resultData;
-	}
+		// 테이블에 있던 모든 자료를 가지고 있는 userList를 리턴
+		return userList;
+	}// getAllUser end
 }	
 		
 	

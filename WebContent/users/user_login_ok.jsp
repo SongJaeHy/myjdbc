@@ -51,7 +51,8 @@
 	<h2><%=id %>님 환영합니다.</h2>
 	<h1>로그인이 완료되었습니다.</h1>
 	<a href="user_logout.jsp">로그아웃하기</a><br/>
-	<a href="user_delete_form.jsp">회원탈퇴하기</a>
-	<a href="user_update_form.jsp">회원수정하기</a>
+	<a href="user_delete_form.jsp">회원탈퇴하기</a><br/>
+	<a href="user_update_form.jsp">회원수정하기</a><br/>
+	<a href="user_get_all.jsp">회원 목록 보기</a>
 </body>
 </html>
