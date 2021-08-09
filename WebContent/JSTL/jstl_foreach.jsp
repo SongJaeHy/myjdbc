@@ -17,6 +17,19 @@
 	<%-- for(int i=1; i<=100; i++{
 		sum = sum+i; 
 		} --%>	
-	${sum }
+	${sum }<br/>
+	<c:out value="${sum }"/><br/>
+	
+	<h4>1부터 100까지의 홀수의 합</h4>
+	<c:set var="sum" value="0"/><%-- int sum =0; --%>
+	<c:forEach var="n" begin="1" end="100" step="2">
+		<c:set var="sum" value="${sum + n }"/>
+	</c:forEach>
+	<%-- for(int i=1; i<=100; i++{
+		sum = sum+i; 
+		} --%>	
+	${sum }<br/>
+	<c:out value="${sum }"/>
+	
 </body>
 </html>
